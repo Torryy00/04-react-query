@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Movie } from "../../types/movie";
 import css from "./MovieModal.module.css";
@@ -8,23 +8,31 @@ interface MovieModalProps {
   onClose: () => void;
 }
 
-const modalRoot = document.getElementById("modal-root") as HTMLElement;
-
 export default function MovieModal({ movie, onClose }: MovieModalProps) {
+  const [isClient, setIsClient] = useState(false);
+  const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
+
   useEffect(() => {
+    setIsClient(true);
+    const root = document.createElement("div"); // создаем временный контейнер
+    document.body.appendChild(root);
+    setModalRoot(root);
+
     const handleEsc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handleEsc);
+
     return () => {
-      document.body.style.overflow = "auto";
       window.removeEventListener("keydown", handleEsc);
+      document.body.removeChild(root);
     };
   }, [onClose]);
 
+  if (!isClient || !modalRoot) return null;
+
   return createPortal(
-    <div className={css.backdrop} role="dialog" aria-modal="true" onClick={onClose}>
+    <div className={css.backdrop} onClick={onClose}>
       <div className={css.modal} onClick={(e) => e.stopPropagation()}>
-        <button className={css.closeButton} aria-label="Close modal" onClick={onClose}>
+        <button onClick={onClose} className={css.closeButton}>
           &times;
         </button>
         <img
