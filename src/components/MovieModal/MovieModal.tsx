@@ -14,9 +14,12 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
 
   useEffect(() => {
     setIsClient(true);
-    const root = document.createElement("div"); // создаем временный контейнер
+    const root = document.createElement("div");
     document.body.appendChild(root);
     setModalRoot(root);
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
     const handleEsc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", handleEsc);
@@ -24,14 +27,22 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
     return () => {
       window.removeEventListener("keydown", handleEsc);
       document.body.removeChild(root);
+      document.body.style.overflow = originalOverflow;
     };
   }, [onClose]);
 
   if (!isClient || !modalRoot) return null;
 
+  // 🔹 Обробник кліку по бекдропу
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return createPortal(
-    <div className={css.backdrop} onClick={onClose}>
-      <div className={css.modal} onClick={(e) => e.stopPropagation()}>
+    <div className={css.backdrop} onClick={handleBackdropClick}>
+      <div className={css.modal}>
         <button onClick={onClose} className={css.closeButton}>
           &times;
         </button>
